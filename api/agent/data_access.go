@@ -34,7 +34,8 @@ type EnqueueDataAccess interface {
 	Enqueue(ctx context.Context, mCall *models.Call) error
 }
 
-type CallDataAcesss interface {
+// CallHandler consumes the start and finish events for a call
+type CallHandler interface {
 	io.Closer
 	// Start will attempt to start the provided Call within an appropriate
 	// context.
@@ -52,7 +53,7 @@ type CallDataAcesss interface {
 type DataAccess interface {
 	ReadDataAccess
 	DequeueDataAccess
-	CallDataAcesss
+	CallHandler
 
 	// Close will wait for any pending operations to complete and
 	// shuts down connections to the underlying datastore/queue resources.
@@ -178,7 +179,7 @@ func (da *directEnequeue) Enqueue(ctx context.Context, mCall *models.Call) error
 	// TODO: Insert a call in the datastore with the 'queued' state
 }
 
-func NewDirectCallDataAccess(ls models.LogStore, mq models.MessageQueue) CallDataAcesss {
+func NewDirectCallDataAccess(ls models.LogStore, mq models.MessageQueue) CallHandler {
 	da := &directDataAccess{
 		mq: mq,
 		ls: ls,
@@ -229,9 +230,9 @@ func (da *directDataAccess) Finish(ctx context.Context, mCall *models.Call, stde
 // and Datastore are different, it will call Close on the Logstore as well.
 func (da *directDataAccess) Close() error {
 	// TRIGGERWIP: Make sure DS is still correctly closed in server
-	//err := da.ds.Close()
-	//if ls, ok := da.ds.(models.LogStore); ok && ls != da.ls {
-	//	if daErr := da.ls.Close(); daErr != nil {
+	//err := handler.ds.Close()
+	//if ls, ok := handler.ds.(models.LogStore); ok && ls != handler.ls {
+	//	if daErr := handler.ls.Close(); daErr != nil {
 	//		err = daErr
 	//	}
 	//}

@@ -377,7 +377,7 @@ func (a *agent) GetCall(opts ...CallOpt) (Call, error) {
 
 	setupCtx(&c)
 
-	c.da = a.cda
+	c.handler = a.cda
 	c.ct = a
 	c.stderr = setupLogger(c.req.Context(), a.cfg.MaxLogSize, c.Call)
 	if c.w == nil {
@@ -411,7 +411,7 @@ type call struct {
 	// IsCloudEvent flag whether this was ingested as a cloud event. This may become the default or only way.
 	IsCloudEvent bool `json:"is_cloud_event"`
 
-	da             CallDataAcesss
+	handler        CallHandler
 	w              io.Writer
 	req            *http.Request
 	stderr         io.ReadWriteCloser
@@ -483,7 +483,7 @@ func (c *call) Start(ctx context.Context) error {
 		// running to avoid running the call twice and potentially mark it as
 		// errored (built in long running task detector, so to speak...)
 
-		err := c.da.Start(ctx, c.Model())
+		err := c.handler.Start(ctx, c.Model())
 		if err != nil {
 			return err // let another thread try this
 		}
@@ -516,7 +516,7 @@ func (c *call) End(ctx context.Context, errIn error) error {
 	// ensure stats histogram is reasonably bounded
 	c.Call.Stats = drivers.Decimate(240, c.Call.Stats)
 
-	if err := c.da.Finish(ctx, c.Model(), c.stderr, c.Type == models.TypeAsync); err != nil {
+	if err := c.handler.Finish(ctx, c.Model(), c.stderr, c.Type == models.TypeAsync); err != nil {
 		common.Logger(ctx).WithError(err).Error("error finalizing call on datastore/mq")
 		// note: Not returning err here since the job could have already finished successfully.
 	}

@@ -598,7 +598,7 @@ func (pr *pureRunner) Status(ctx context.Context, _ *empty.Empty) (*runner.Runne
 	}, nil
 }
 
-func DefaultPureRunner(cancel context.CancelFunc, addr string, da CallDataAcesss, cert string, key string, ca string) (Agent, error) {
+func DefaultPureRunner(cancel context.CancelFunc, addr string, da CallHandler, cert string, key string, ca string) (Agent, error) {
 
 	agent := New(da)
 

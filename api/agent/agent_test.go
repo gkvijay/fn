@@ -1204,7 +1204,7 @@ func TestNBIOResourceTracker(t *testing.T) {
 }
 
 type closingDataAccess struct {
-	CallDataAcesss
+	CallHandler
 	closeReturn error
 	closed      chan struct{}
 }
@@ -1212,9 +1212,9 @@ type closingDataAccess struct {
 func newClosingDataAccess(closeReturn error) *closingDataAccess {
 	ls := logs.NewMock()
 	return &closingDataAccess{
-		CallDataAcesss: NewDirectCallDataAccess(ls, new(mqs.Mock)),
-		closed:         make(chan struct{}),
-		closeReturn:    closeReturn,
+		CallHandler: NewDirectCallDataAccess(ls, new(mqs.Mock)),
+		closed:      make(chan struct{}),
+		closeReturn: closeReturn,
 	}
 
 }

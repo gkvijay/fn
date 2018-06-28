@@ -19,7 +19,7 @@ import (
 
 type lbAgent struct {
 	cfg           AgentConfig
-	cda           CallDataAcesss
+	cda           CallHandler
 	callListeners []fnext.CallListener
 	rp            pool.RunnerPool
 	placer        pool.Placer
@@ -50,7 +50,7 @@ func WithLBCallOverrider(fn CallOverrider) LBAgentOption {
 
 // NewLBAgent creates an Agent that knows how to load-balance function calls
 // across a group of runner nodes.
-func NewLBAgent(da CallDataAcesss, rp pool.RunnerPool, p pool.Placer, options ...LBAgentOption) (Agent, error) {
+func NewLBAgent(da CallHandler, rp pool.RunnerPool, p pool.Placer, options ...LBAgentOption) (Agent, error) {
 
 	// Yes, LBAgent and Agent both use an AgentConfig.
 	cfg, err := NewAgentConfig()
@@ -127,7 +127,7 @@ func (a *lbAgent) GetCall(opts ...CallOpt) (Call, error) {
 	setupCtx(&c)
 
 	c.isLB = true
-	c.da = a.cda
+	c.handler = a.cda
 	c.ct = a
 	c.stderr = &nullReadWriter{}
 	c.slotHashId = getSlotQueueKey(&c)

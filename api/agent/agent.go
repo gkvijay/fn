@@ -92,8 +92,7 @@ type Agent interface {
 
 type agent struct {
 	cfg           AgentConfig
-	cda           CallDataAcesss
-	dqda          DequeueDataAccess
+	da            CallHandler
 	callListeners []fnext.CallListener
 
 	driver drivers.Driver
@@ -116,7 +115,7 @@ type agent struct {
 type AgentOption func(*agent) error
 
 // New creates an Agent that executes functions locally as Docker containers.
-func New(da CallDataAcesss, options ...AgentOption) Agent {
+func New(da CallHandler, options ...AgentOption) Agent {
 
 	cfg, err := NewAgentConfig()
 	if err != nil {
@@ -128,7 +127,7 @@ func New(da CallDataAcesss, options ...AgentOption) Agent {
 	}
 
 	a.shutWg = common.NewWaitGroup()
-	a.cda = da
+	a.da = da
 	a.slotMgr = NewSlotQueueMgr()
 
 	// Allow overriding config
@@ -234,7 +233,7 @@ func (a *agent) Close() error {
 
 	// TODO TRIGGERWIP: stopped agent from closing data access
 
-	daErr := a.cda.Close()
+	daErr := a.da.Close()
 	if daErr != nil {
 		return daErr
 	}
