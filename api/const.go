@@ -13,7 +13,7 @@ const (
 	ParamRouteName string = "route"
 	ParamTriggerID string = "triggerID"
 	ParamCallID    string = "call"
-	ParamFnID      string = "fnId"
+	ParamFnID      string = "fnID"
 
 	//
 	ParamSource string = "source"
