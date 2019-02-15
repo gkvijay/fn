@@ -42,7 +42,7 @@ type Call interface {
 }
 
 // CallOverrider should die. Interceptor in GetCall
-type CallOverrider func(*models.Call, map[string]string) (map[string]string, error)
+type CallOverrider func(ctx context.Context, *models.Call, map[string]string) (map[string]string, error)
 
 // CallOpt allows configuring a call before execution
 // TODO(reed): consider the interface here, all options must be defined in agent and flexible
@@ -238,16 +238,6 @@ func (a *agent) GetCall(opts ...CallOpt) (Call, error) {
 		return nil, errors.New("no model or request provided for call")
 	}
 
-	// If overrider is present, let's allow it to modify models.Call
-	// and call extensions
-	if a.callOverrider != nil {
-		ext, err := a.callOverrider(c.Call, c.extensions)
-		if err != nil {
-			return nil, err
-		}
-		c.extensions = ext
-	}
-
 	mem := c.Memory + uint64(c.TmpFsSize)
 	if !a.resources.IsResourcePossible(mem, c.CPUs) {
 		return nil, models.ErrCallResourceTooBig
@@ -273,6 +263,16 @@ func (a *agent) GetCall(opts ...CallOpt) (Call, error) {
 		// send function output to logs if no writer given (async...)
 		// TODO we could/should probably make this explicit to GetCall, ala 'WithLogger', but it's dupe code (who cares?)
 		c.respWriter = c.stderr
+	}
+
+	// If overrider is present, let's allow it to modify models.Call
+	// and call extensions. Pass the context to callOverrider
+	if a.callOverrider != nil {
+		ext, err := a.callOverrider(c.req.Context(), c.Call, c.extensions)
+		if err != nil {
+			return nil, err
+		}
+		c.extensions = ext
 	}
 
 	return &c, nil
